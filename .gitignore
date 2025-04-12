@@ -23,3 +23,15 @@ go.work.sum
 
 # env file
 .env
+
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+
+# Go
+bin/
+vendor/
+coverage.out 
