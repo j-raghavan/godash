@@ -58,8 +58,7 @@ func TestRunServer(t *testing.T) {
 
 	// Reset stdout
     if err := w.Close(); err != nil {
-        t.Fatalf("Failed to rest stdout: %v", err)
-    }
+        t.Fatalf("Failed to reset stdout: %v", err)
 	os.Stdout = old
 
 	// Read the output
