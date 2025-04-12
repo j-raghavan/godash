@@ -35,3 +35,7 @@ go.work.sum
 bin/
 vendor/
 coverage.out 
+
+
+# Scratchpad
+scratch/
