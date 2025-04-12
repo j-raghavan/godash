@@ -25,12 +25,16 @@ func TestRunMonitor(t *testing.T) {
 	core.RunMonitor(testConfig)
 
 	// Reset stdout
-	w.Close()
+    if err := w.Close(); err != nil {
+        t.Fatalf("Failed to close writer: %v", err)
+    }
 	os.Stdout = old
 
 	// Read the output
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+    if _, err := io.Copy(&buf, r); err != nil {
+        t.Fatalf("Failed to copy: %v", err)
+    }
 	output := buf.String()
 
 	// Assertions
@@ -53,12 +57,16 @@ func TestRunServer(t *testing.T) {
 	core.RunServer(testConfig)
 
 	// Reset stdout
-	w.Close()
+    if err := w.Close(); err != nil {
+        t.Fatalf("Failed to rest stdout: %v", err)
+    }
 	os.Stdout = old
 
 	// Read the output
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+    if _, err := io.Copy(&buf, r); err != nil {
+        t.Fatalf("Failed to copy: %v", err)
+    }
 	output := buf.String()
 
 	// Assertions

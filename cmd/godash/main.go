@@ -38,7 +38,10 @@ var rootCmd = &cobra.Command{
 	It's designed for developers, DevOps engineers, and homelab enthusiasts
 	who need a portable and install-free performance monitor.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+        if err := cmd.Help(); err != nil {
+            fmt.Println(err)
+            OsExit(1)
+        }
 	},
 }
 
