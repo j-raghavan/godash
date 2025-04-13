@@ -81,7 +81,7 @@ func TestCollectFunctionality(t *testing.T) {
 				if metric == nil {
 					t.Fatal("Expected non-nil metric")
 				}
-				if metric.Timesteamp.IsZero() {
+				if metric.Timestamp.IsZero() {
 					t.Error("Expected non-zero timestamp")
 				}
 			},

@@ -39,8 +39,8 @@ func TestCollect(t *testing.T) {
 
 	// Test timestamp is reasonable (within the last minute)
 	now := time.Now()
-	if metric.Timesteamp.After(now) || metric.Timesteamp.Before(now.Add(-time.Minute)) {
-		t.Errorf("Expected timestamp to be within the last minute, got %v", metric.Timesteamp)
+	if metric.Timestamp.After(now) || metric.Timestamp.Before(now.Add(-time.Minute)) {
+		t.Errorf("Expected timestamp to be within the last minute, got %v", metric.Timestamp)
 	}
 
 	// Test CPU metrics
@@ -101,7 +101,7 @@ func TestMetricTypes(t *testing.T) {
 		name string
 		kind reflect.Kind
 	}{
-		{"Timesteamp", reflect.Struct}, // Note: This matches the typo in the original code
+		{"Timestamp", reflect.Struct}, // Note: This matches the typo in the original code
 		{"CPU", reflect.Slice},
 		{"Memory", reflect.Struct},
 		{"Disk", reflect.Slice},

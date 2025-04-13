@@ -7,7 +7,7 @@ import (
 
 // Metric represents a snapthot of system metrics at a pont in time.
 type Metric struct {
-	Timesteamp time.Time
+	Timestamp time.Time
 	CPU        []float64
 	Memory     MemoryStat
 	Disk       []DiskStat
@@ -80,7 +80,7 @@ func NewSystemCollector() *SystemCollector {
 // Collect returns the current system metrics
 func (c *SystemCollector) Collect() (*Metric, error) {
 	metric := &Metric{
-		Timesteamp: time.Now(),
+		Timestamp: time.Now(),
 	}
 	// Collect CPU metrics
 	cpuPercent, err := collectCPUMetrics()

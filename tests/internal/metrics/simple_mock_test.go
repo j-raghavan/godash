@@ -18,7 +18,7 @@ type SimpleMockCollector struct {
 func NewSimpleMockCollector() *SimpleMockCollector {
 	return &SimpleMockCollector{
 		MetricToReturn: &m.Metric{
-			Timesteamp: time.Now(),
+			Timestamp: time.Now(),
 			CPU:        []float64{1.0, 2.0},
 			Memory: m.MemoryStat{
 				Total:          1000,

@@ -85,7 +85,7 @@ func NewMockCollector(provider *MockMetricProvider) *MockCollector {
 // Collect returns mock system metrics
 func (c *MockCollector) Collect() (*m.Metric, error) {
 	metric := &m.Metric{
-		Timesteamp: time.Now(),
+		Timestamp: time.Now(),
 	}
 
 	// Collect CPU metrics
