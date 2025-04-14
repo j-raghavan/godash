@@ -8,11 +8,11 @@ import (
 // Metric represents a snapthot of system metrics at a pont in time.
 type Metric struct {
 	Timestamp time.Time
-	CPU        []float64
-	Memory     MemoryStat
-	Disk       []DiskStat
-	Network    []NetworkStat
-	GoRuntime  GoRuntimeStat
+	CPU       []float64
+	Memory    MemoryStat
+	Disk      []DiskStat
+	Network   []NetworkStat
+	GoRuntime GoRuntimeStat
 }
 
 // MemoryStat represents the memory usage of the system.
