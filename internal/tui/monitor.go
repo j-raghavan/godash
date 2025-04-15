@@ -65,8 +65,8 @@ func (ui *UI) Start(refreshInterval time.Duration) error {
 		return event
 	})
 
-	// Start metrics collection
-	ui.collector.Start(refreshInterval, ui.metricsChan)
+	// Start metrics collection with a fixed 1000ms interval for smoother updates
+	ui.collector.Start(1000*time.Millisecond, ui.metricsChan)
 
 	// Start the UI update routine
 	go ui.update()
@@ -116,61 +116,85 @@ func (ui *UI) renderMetrics(metric metrics.Metric) {
 	ui.app.QueueUpdateDraw(func() {
 		ui.metricsView.Clear()
 
+		// Header
 		_, _ = fmt.Fprintf(ui.metricsView, "[green]GoDash - Metrics at %s[white]\n", metric.Timestamp.Format("15:04:05"))
 		_, _ = fmt.Fprintf(ui.metricsView, "---------------------------------------\n\n")
 
-		// CPU
+		// CPU Section
+		_, _ = fmt.Fprintf(ui.metricsView, "[blue]CPU Usage[white]\n")
 		if len(metric.CPU) > 0 {
-			_, _ = fmt.Fprintf(ui.metricsView, "[blue]CPU:[white] %.1f%%\n", metric.CPU[0])
+			// Overall CPU usage
+			_, _ = fmt.Fprintf(ui.metricsView, "  Overall: %.1f%%\n", metric.CPU[0])
 
+			// Per-core usage with progress bars in three columns
 			if len(metric.CPU) > 1 {
-				_, _ = fmt.Fprintf(ui.metricsView, "  [blue]Per Core:[white] ")
-				for i, cpu := range metric.CPU[1:] {
-					_, _ = fmt.Fprintf(ui.metricsView, "core%d: %.1f%% ", i, cpu)
+				_, _ = fmt.Fprintf(ui.metricsView, "  Per Core:\n")
+
+				// Calculate number of rows needed (ceiling division)
+				numCores := len(metric.CPU[1:])
+				rows := (numCores + 2) / 3 // Round up division
+
+				for row := 0; row < rows; row++ {
+					// Print up to 3 cores per row
+					for col := 0; col < 3; col++ {
+						coreIndex := row*3 + col
+						if coreIndex < numCores {
+							cpu := metric.CPU[coreIndex+1]
+							bar := createProgressBar(cpu, 15)
+							_, _ = fmt.Fprintf(ui.metricsView, "    Core %2d: [%s] %5.1f%%  ",
+								coreIndex, bar, cpu)
+						}
+					}
+					_, _ = fmt.Fprintf(ui.metricsView, "\n")
 				}
-				_, _ = fmt.Fprintf(ui.metricsView, "\n")
 			}
 		}
 
-		// Memory
-		_, _ = fmt.Fprintf(ui.metricsView, "\n[blue]Memory:[white] %.2f GB / %.2f GB (%.1f%%)\n",
-			float64(metric.Memory.Used)/(1024*1024*1024),
-			float64(metric.Memory.Total)/(1024*1024*1024),
-			metric.Memory.UsedPercentage)
+		// Memory Section
+		_, _ = fmt.Fprintf(ui.metricsView, "\n[blue]Memory Usage[white]\n")
+		memBar := createProgressBar(metric.Memory.UsedPercentage, 20)
+		_, _ = fmt.Fprintf(ui.metricsView, "  [%s] %.1f%%\n", memBar, metric.Memory.UsedPercentage)
+		_, _ = fmt.Fprintf(ui.metricsView, "  Used: %s / %s\n",
+			formatBytes(metric.Memory.Used),
+			formatBytes(metric.Memory.Total))
 
-		// Disk
-		if len(metric.Disk) > 0 {
-			_, _ = fmt.Fprintf(ui.metricsView, "\n[blue]Disk:[white]\n")
-			for _, disk := range metric.Disk {
-				_, _ = fmt.Fprintf(ui.metricsView, "  %s: %.1f%% used (%.2f GB / %.2f GB)\n",
-					disk.Path,
-					disk.UsedPercentage,
-					float64(disk.Used)/(1024*1024*1024),
-					float64(disk.Total)/(1024*1024*1024))
-			}
-		}
-
-		// Network
-		if len(metric.Network) > 0 {
-			_, _ = fmt.Fprintf(ui.metricsView, "\n[blue]Network:[white]\n")
-			for _, net := range metric.Network {
-				_, _ = fmt.Fprintf(ui.metricsView, "  %s: \u2193 %s \u2191 %s\n",
-					net.Interface,
-					formatBytes(net.RxBytes),
-					formatBytes(net.TxBytes))
-			}
-		}
-
-		// Go Runtime
+		// Go Runtime Section (if enabled)
 		if ui.showGoRuntime {
-			_, _ = fmt.Fprintf(ui.metricsView, "\n[blue]Go Runtime:[white]\n")
+			_, _ = fmt.Fprintf(ui.metricsView, "\n[blue]Go Runtime[white]\n")
 			_, _ = fmt.Fprintf(ui.metricsView, "  Goroutines: %d\n", metric.GoRuntime.NumGoroutine)
-			_, _ = fmt.Fprintf(ui.metricsView, "  Memory: %.2f MB allocated, %.2f MB system\n",
-				float64(metric.GoRuntime.MemAlloc)/(1024*1024),
-				float64(metric.GoRuntime.MemSys)/(1024*1024))
-			_, _ = fmt.Fprintf(ui.metricsView, "  GC: %d collections, %.2f ms total pause\n",
-				metric.GoRuntime.NumGC,
-				float64(metric.GoRuntime.PauseTotalNs)/1000000)
+			_, _ = fmt.Fprintf(ui.metricsView, "  Memory Alloc: %s\n", formatBytes(metric.GoRuntime.MemAlloc))
+			_, _ = fmt.Fprintf(ui.metricsView, "  Memory Sys: %s\n", formatBytes(metric.GoRuntime.MemSys))
+			_, _ = fmt.Fprintf(ui.metricsView, "  GC Count: %d\n", metric.GoRuntime.NumGC)
+			_, _ = fmt.Fprintf(ui.metricsView, "  GC Pause: %s\n", time.Duration(metric.GoRuntime.PauseTotalNs))
 		}
 	})
+}
+
+// createProgressBar creates a colored progress bar
+func createProgressBar(percentage float64, width int) string {
+	filled := int(percentage * float64(width) / 100)
+	if filled > width {
+		filled = width
+	}
+	empty := width - filled
+
+	// Choose color based on percentage
+	var color string
+	switch {
+	case percentage < 50:
+		color = "green"
+	case percentage < 80:
+		color = "yellow"
+	default:
+		color = "red"
+	}
+
+	bar := ""
+	for i := 0; i < filled; i++ {
+		bar += "█"
+	}
+	for i := 0; i < empty; i++ {
+		bar += "░"
+	}
+	return color + "]" + bar + "[white"
 }
