@@ -3,14 +3,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 
 	"github.com/j-raghavan/godash/cmd/godash/core"
+	"github.com/j-raghavan/godash/internal/config"
+	"github.com/spf13/cobra"
 )
 
 // Global config
-var config core.Config
+var cfg config.Config
 
 // OsExit for testing - allows tests to override os.Exit
 var OsExit = os.Exit
@@ -37,6 +38,27 @@ var rootCmd = &cobra.Command{
 	
 	It's designed for developers, DevOps engineers, and homelab enthusiasts
 	who need a portable and install-free performance monitor.`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Load configuration from file
+		loadedCfg, err := config.LoadConfig(cfg.ConfigFile)
+		if err != nil {
+			return fmt.Errorf("failed to load config: %w", err)
+		}
+
+		// Override with CLI flags
+		if cmd.Flags().Changed("interval") {
+			loadedCfg.RefreshInterval = cfg.RefreshInterval
+		}
+		if cmd.Flags().Changed("go-runtime") {
+			loadedCfg.EnableGoRuntime = cfg.EnableGoRuntime
+		}
+		if cmd.Flags().Changed("port") {
+			loadedCfg.WebPort = cfg.WebPort
+		}
+
+		cfg = loadedCfg
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := cmd.Help(); err != nil {
 			fmt.Println(err)
@@ -52,7 +74,7 @@ var monitorCmd = &cobra.Command{
 	Long: `Start GoDash in terminal UI mode, displaying real-time system metrics.
 Press 'q' to quit, 'g' to toggle Go runtime stats.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		core.RunMonitor(config)
+		core.RunMonitor(cfg)
 	},
 }
 
@@ -63,7 +85,7 @@ var serverCmd = &cobra.Command{
 	Long: `Start GoDash web server, providing a dashboard accessible via browser
 at http://localhost:<port> and metrics via REST API and WebSocket.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		core.RunServer(config)
+		core.RunServer(cfg)
 	},
 }
 
@@ -79,12 +101,12 @@ var versionCmd = &cobra.Command{
 
 func init() {
 	// Define global flags that apply to all commands
-	rootCmd.PersistentFlags().StringVarP(&config.ConfigFile, "config", "c", "", "config file (default is $HOME/.godash.toml)")
-	rootCmd.PersistentFlags().IntVarP(&config.RefreshInterval, "interval", "i", 1, "Metrics refresh interval in seconds")
-	rootCmd.PersistentFlags().BoolVarP(&config.EnableGoRuntime, "go-runtime", "g", false, "Enable Go runtime metrics")
+	rootCmd.PersistentFlags().StringVarP(&cfg.ConfigFile, "config", "c", "", "config file (default is $HOME/.godash.toml)")
+	rootCmd.PersistentFlags().IntVarP(&cfg.RefreshInterval, "interval", "i", 1, "Metrics refresh interval in seconds")
+	rootCmd.PersistentFlags().BoolVarP(&cfg.EnableGoRuntime, "go-runtime", "g", false, "Enable Go runtime metrics")
 
 	// Add flags specific to the server command
-	serverCmd.Flags().IntVarP(&config.WebPort, "port", "p", 8080, "Port to serve dashboard on")
+	serverCmd.Flags().IntVarP(&cfg.WebPort, "port", "p", 8080, "Port to serve dashboard on")
 
 	// Add subcommands to root command
 	rootCmd.AddCommand(monitorCmd)

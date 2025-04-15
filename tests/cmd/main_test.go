@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/j-raghavan/godash/cmd/godash/core"
+	"github.com/j-raghavan/godash/internal/config"
 )
 
 func TestRunMonitor(t *testing.T) {
@@ -18,7 +19,7 @@ func TestRunMonitor(t *testing.T) {
 	os.Stdout = w
 
 	// Call the function directly for testing
-	testConfig := core.Config{
+	testConfig := config.Config{
 		RefreshInterval: 10,
 		EnableGoRuntime: true,
 	}
@@ -49,16 +50,16 @@ func TestRunServer(t *testing.T) {
 	os.Stdout = w
 
 	// Call the function directly for testing
-	testConfig := core.Config{
-		RefreshInterval: 15,
-		WebPort:         8888,
-		EnableGoRuntime: false,
+	testConfig := config.Config{
+		RefreshInterval: 5,
+		WebPort:         9090,
+		EnableGoRuntime: true,
 	}
 	core.RunServer(testConfig)
 
 	// Reset stdout
 	if err := w.Close(); err != nil {
-		t.Fatalf("Failed to reset stdout: %v", err)
+		t.Fatalf("Failed to close writer: %v", err)
 	}
 	os.Stdout = old
 
@@ -70,9 +71,9 @@ func TestRunServer(t *testing.T) {
 	output := buf.String()
 
 	// Assertions
-	assert.Contains(t, output, "web server on port 8888")
-	assert.Contains(t, output, "Refresh interval: 15s")
-	assert.NotContains(t, output, "Go runtime metrics enabled")
+	assert.Contains(t, output, "port 9090")
+	assert.Contains(t, output, "refresh interval: 5s")
+	assert.Contains(t, output, "Go runtime metrics enabled")
 }
 
 func TestShowVersion(t *testing.T) {

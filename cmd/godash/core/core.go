@@ -4,20 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/j-raghavan/godash/internal/config"
 	"github.com/j-raghavan/godash/internal/metrics"
 	"github.com/j-raghavan/godash/internal/tui"
 )
 
-// Config holds application configuration
-type Config struct {
-	ConfigFile      string
-	RefreshInterval int
-	WebPort         int
-	EnableGoRuntime bool
-}
-
 // RunMonitor contains the actual monitor logic
-func RunMonitor(cfg Config) {
+func RunMonitor(cfg config.Config) {
 	fmt.Printf("Starting GoDash monitor with refresh interval: %ds\n", cfg.RefreshInterval)
 	if cfg.EnableGoRuntime {
 		fmt.Println("Go runtime metrics enabled.")
@@ -40,7 +33,7 @@ func RunMonitor(cfg Config) {
 }
 
 // RunServer contains the actual server logic
-func RunServer(cfg Config) {
+func RunServer(cfg config.Config) {
 	fmt.Printf("Starting GoDash web server on port %d\n", cfg.WebPort)
 	fmt.Printf("Refresh interval: %ds\n", cfg.RefreshInterval)
 	if cfg.EnableGoRuntime {
