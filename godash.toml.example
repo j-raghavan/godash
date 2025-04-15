@@ -1,0 +1,10 @@
+# GoDash Configuration
+
+# Refresh interval in seconds
+refresh_interval = 2
+
+# Web server port
+web_port = 8080
+
+# Enable Go runtime metrics
+enable_go_runtime = true 

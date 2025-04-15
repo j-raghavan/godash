@@ -4,6 +4,7 @@ go 1.24.2
 
 require (
 	github.com/gdamore/tcell/v2 v2.8.1
+	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/rivo/tview v0.0.0-20250330220935-949945f8d922
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
