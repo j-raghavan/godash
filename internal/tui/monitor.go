@@ -79,7 +79,7 @@ func (ui *UI) Start(refreshInterval time.Duration) error {
 func (ui *UI) Stop() {
 	ui.cancel()
 	ui.collector.Stop()
-	ui.app.Stop()
+	close(ui.metricsChan)
 }
 
 // update refreshes the UI with the latest metrics
