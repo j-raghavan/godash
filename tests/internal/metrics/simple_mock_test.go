@@ -19,7 +19,7 @@ func NewSimpleMockCollector() *SimpleMockCollector {
 	return &SimpleMockCollector{
 		MetricToReturn: &m.Metric{
 			Timestamp: time.Now(),
-			CPU:        []float64{1.0, 2.0},
+			CPU:       []float64{1.0, 2.0},
 			Memory: m.MemoryStat{
 				Total:          1000,
 				Free:           500,
