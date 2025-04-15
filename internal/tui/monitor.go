@@ -86,7 +86,10 @@ func (ui *UI) Stop() {
 func (ui *UI) update() {
 	for {
 		select {
-		case metric := <-ui.metricsChan:
+		case metric, ok := <-ui.metricsChan:
+			if !ok {
+				return
+			}
 			ui.renderMetrics(metric)
 		case <-ui.ctx.Done():
 			return
