@@ -2,6 +2,10 @@ package core
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/j-raghavan/godash/internal/metrics"
+	"github.com/j-raghavan/godash/internal/tui"
 )
 
 // Config holds application configuration
@@ -20,8 +24,19 @@ func RunMonitor(cfg Config) {
 	} else {
 		fmt.Println("Go runtime metrics disabled.")
 	}
-	// This is where you would initialize and start the TUI
-	fmt.Println("CLI monitor would start here (implementation pending)")
+
+	// Create a new metrics collector
+	collector := metrics.NewSystemCollector()
+
+	// Create a new UI instance
+	ui := tui.NewUI(collector, cfg.EnableGoRuntime)
+
+	// Start the UI with the configured refresh interval
+	refreshInterval := time.Duration(cfg.RefreshInterval) * time.Second
+	if err := ui.Start(refreshInterval); err != nil {
+		fmt.Printf("Error starting UI: %v\n", err)
+		return
+	}
 }
 
 // RunServer contains the actual server logic
