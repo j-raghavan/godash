@@ -351,3 +351,73 @@ func formatBytes(b uint64) string {
 	}
 	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
 }
+
+// CPUView returns the CPU metrics view
+func (ui *UI) CPUView() *tview.TextView {
+	return ui.cpuView
+}
+
+// MemoryView returns the memory metrics view
+func (ui *UI) MemoryView() *tview.TextView {
+	return ui.memoryView
+}
+
+// DiskView returns the disk metrics view
+func (ui *UI) DiskView() *tview.TextView {
+	return ui.diskView
+}
+
+// NetworkView returns the network metrics view
+func (ui *UI) NetworkView() *tview.TextView {
+	return ui.networkView
+}
+
+// App returns the tview application
+func (ui *UI) App() *tview.Application {
+	return ui.app
+}
+
+// ShowGoRuntime returns whether Go runtime stats are shown
+func (ui *UI) ShowGoRuntime() bool {
+	return ui.showGoRuntime
+}
+
+// RenderMetrics renders the metrics in the UI
+func (ui *UI) RenderMetrics(metric metrics.Metric) {
+	ui.renderMetrics(metric)
+}
+
+// FormatBytes formats bytes into a human-readable string
+func FormatBytes(bytes uint64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %ciB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+// CreateProgressBar creates a progress bar string
+func CreateProgressBar(percent float64, width int) string {
+	filled := int(percent * float64(width) / 100)
+	if filled > width {
+		filled = width
+	}
+	bar := strings.Repeat("█", filled)
+	empty := strings.Repeat("░", width-filled)
+	return fmt.Sprintf("[green]%s[white]%s", bar, empty)
+}
+
+// SetApp sets the tview application
+func (ui *UI) SetApp(app *tview.Application) {
+	ui.app = app
+}
+
+// ToggleGoRuntime toggles the display of Go runtime stats
+func (ui *UI) ToggleGoRuntime() {
+	ui.showGoRuntime = !ui.showGoRuntime
+}

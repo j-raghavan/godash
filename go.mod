@@ -5,6 +5,7 @@ go 1.21.0
 toolchain go1.24.2
 
 require (
+	github.com/gdamore/tcell v1.4.0
 	github.com/gdamore/tcell/v2 v2.7.1
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/rivo/tview v0.0.0-20250330220935-949945f8d922

@@ -22,9 +22,12 @@
 
 ## 📸 Screenshots
 
-| CLI View | Web Dashboard |
-|----------|---------------|
-| *Coming Soon* | *Coming Soon* |
+### Terminal UI
+
+
+### Web Dashboard 
+![Web Dashboard Dark](scratchpad/Screenshot_2025-04-15_17-26-31.png)
+*Web interface with real-time charts (Dark Theme)*
 
 ---
 
@@ -36,9 +39,9 @@
 git clone https://github.com/j-raghavan/godash.git
 cd godash
 go build -o godash ./cmd/godash
+```
 
-
-Or instal via:
+Or install via:
 ```bash
 go install github.com/j-raghavan/godash/cmd/godash@latest
 ```
