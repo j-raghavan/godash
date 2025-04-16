@@ -335,7 +335,7 @@ func createProgressBar(percentage float64, width int) string {
 	for i := 0; i < empty; i++ {
 		bar += "░"
 	}
-	return color + "]" + bar + "[white"
+	return "[" + color + "]" + bar + "[white]"
 }
 
 // formatBytes formats bytes to human readable format
