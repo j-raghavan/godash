@@ -3,6 +3,9 @@ package metrics
 import (
 	"runtime"
 	"time"
+
+	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v3/net"
 )
 
 // Metric represents a snapthot of system metrics at a pont in time.
@@ -68,12 +71,17 @@ type Collector interface {
 type SystemCollector struct {
 	stopChan chan struct{}
 	running  bool
+	// Store previous network stats to calculate rates
+	prevNetStats map[string]net.IOCountersStat
+	prevTime     time.Time
 }
 
 // NewSystemCollector creates a new SystemCollector
 func NewSystemCollector() *SystemCollector {
 	return &SystemCollector{
-		stopChan: make(chan struct{}),
+		stopChan:     make(chan struct{}),
+		prevNetStats: make(map[string]net.IOCountersStat),
+		prevTime:     time.Now(),
 	}
 }
 
@@ -95,14 +103,16 @@ func (c *SystemCollector) Collect() (*Metric, error) {
 		return nil, err
 	}
 	metric.Memory = memoryStat
+
 	// Collect Disk metrics
 	diskStats, err := collectDiskMetrics()
 	if err != nil {
 		return nil, err
 	}
 	metric.Disk = diskStats
+
 	// Collect Network metrics
-	networkStats, err := collectNetworkMetrics()
+	networkStats, err := c.collectNetworkMetrics()
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +125,8 @@ func (c *SystemCollector) Collect() (*Metric, error) {
 
 // Start begins periodic collection of system metrics
 func (c *SystemCollector) Start(interval time.Duration,
-	metricsChan chan<- Metric) {
+	metricsChan chan<- Metric,
+) {
 	if c.running {
 		return
 	}
@@ -175,14 +186,66 @@ func collectMemoryMetrics() (MemoryStat, error) {
 
 // collectDiskMetrics collects disk usage metrics
 func collectDiskMetrics() ([]DiskStat, error) {
-	// Placeholder for actual disk usage
-	return []DiskStat{}, nil
+	partitions, err := disk.Partitions(false)
+	if err != nil {
+		return nil, err
+	}
+
+	var diskStats []DiskStat
+	for _, partition := range partitions {
+		usage, err := disk.Usage(partition.Mountpoint)
+		if err != nil {
+			continue
+		}
+
+		diskStats = append(diskStats, DiskStat{
+			Path:           partition.Mountpoint,
+			Total:          usage.Total,
+			Used:           usage.Used,
+			Free:           usage.Free,
+			UsedPercentage: usage.UsedPercent,
+		})
+	}
+
+	return diskStats, nil
 }
 
 // collectNetworkMetrics collects network usage metrics
-func collectNetworkMetrics() ([]NetworkStat, error) {
-	// Placeholder for actual network usage
-	return []NetworkStat{}, nil
+func (c *SystemCollector) collectNetworkMetrics() ([]NetworkStat, error) {
+	counters, err := net.IOCounters(true)
+	if err != nil {
+		return nil, err
+	}
+
+	currentTime := time.Now()
+	var networkStats []NetworkStat
+
+	for _, counter := range counters {
+		netStat := NetworkStat{
+			Interface: counter.Name,
+			RxBytes:   counter.BytesRecv,
+			TxBytes:   counter.BytesSent,
+			RxPackets: counter.PacketsRecv,
+			TxPackets: counter.PacketsSent,
+		}
+
+		// Calculate rates if we have previous measurements
+		if prev, ok := c.prevNetStats[counter.Name]; ok {
+			timeDiff := currentTime.Sub(c.prevTime).Seconds()
+			if timeDiff > 0 {
+				netStat.RxBytes = uint64(float64(counter.BytesRecv-prev.BytesRecv) / timeDiff)
+				netStat.TxBytes = uint64(float64(counter.BytesSent-prev.BytesSent) / timeDiff)
+				netStat.RxPackets = uint64(float64(counter.PacketsRecv-prev.PacketsRecv) / timeDiff)
+				netStat.TxPackets = uint64(float64(counter.PacketsSent-prev.PacketsSent) / timeDiff)
+			}
+		}
+
+		networkStats = append(networkStats, netStat)
+		c.prevNetStats[counter.Name] = counter
+	}
+
+	c.prevTime = currentTime
+	return networkStats, nil
 }
 
 // collectGoRuntimeMetrics collects Go runtime metrics
